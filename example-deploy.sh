@@ -185,51 +185,52 @@ function deploy() {
     fi
     cleanOldReleases
     checkDependencies
-	# Make directory to release directory
-	SOURCEDIR="$WORKDIR/release/$(date +%Y%m%d%H%M%S)"
-	[ ! -d $SOURCEDIR ] && mkdir $SOURCEDIR
+    # Make directory to release directory
+    SOURCEDIR="$WORKDIR/release/$(date +%Y%m%d%H%M%S)"
+    [ ! -d $SOURCEDIR ] && mkdir $SOURCEDIR
 
     # Get files from source code repository
     git clone $SOURCEURL $SOURCEDIR
     # svn co http://$SOURCEURL $WORKDIR/repository
 
+    # TODO
     # get branchnames or revision numbers from VCS data
 
 
-	# Remove .git or .svn
-	[ -d $SOURCEDIR/.git ] && rm -rf $SOURCEDIR/.git
-	[ -d $SOURCEDIR/.svn ] && rm -rf $SOURCEDIR/.svn
+    # Remove .git or .svn
+    [ -d $SOURCEDIR/.git ] && rm -rf $SOURCEDIR/.git
+    [ -d $SOURCEDIR/.svn ] && rm -rf $SOURCEDIR/.svn
 
-	# ifdef Complie
+    # ifdef Complie
     # endif
 
-	# Make source code symbolic link to current
-	( [ -f $WORKDIR/current ] || [ -d $WORKDIR/current ] ) && rm -rf $WORKDIR/current
-	ln -s $SOURCEDIR $WORKDIR/current
+    # Make source code symbolic link to current
+    ( [ -f $WORKDIR/current ] || [ -d $WORKDIR/current ] ) && rm -rf $WORKDIR/current
+    ln -s $SOURCEDIR $WORKDIR/current
 
-	# Move conf and logs directies from release to share
+    # Move conf and logs directies from release to share
     [ -d $WORKDIR/release/conf ] && mv $WORKDIR/release/conf $WORKDIR/share/conf
     [ -d $WORKDIR/release/logs ] && mv $WORKDIR/release/logs $WORKDIR/share/logs
 
-	# Make conf and logs symbolic link to current
-	[ -d $WORKDIR/share/conf ] && ln -s $WORKDIR/share/conf $WORKDIR/current/conf
-	[ -d $WORKDIR/share/logs ] && ln -s $WORKDIR/share/logs $WORKDIR/current/logs
+    # Make conf and logs symbolic link to current
+    [ -d $WORKDIR/share/conf ] && ln -s $WORKDIR/share/conf $WORKDIR/current/conf
+    [ -d $WORKDIR/share/logs ] && ln -s $WORKDIR/share/logs $WORKDIR/current/logs
 
-	# Start service or validate status
-	if [[ -e $WORKDIR/current/bin/startup.sh ]]; then
-	    $WORKDIR/current/bin/startup.sh start
-	    RETVAL=$?
+    # Start service or validate status
+    if [[ -e $WORKDIR/current/bin/startup.sh ]]; then
+        $WORKDIR/current/bin/startup.sh start
+        RETVAL=$?
     else
         # TODO
         # external health check
-	    RETVAL=0
+        RETVAL=0
     fi
-	RETVAL=$?
+    RETVAL=$?
 
-	# if started ok, then create a workable program to a file
-	if [[ $RETVAL -eq 0 ]]; then
-	# Note cat with eof must start at row 0, and with eof end only, such as no blank spaces, etc
-	cat >$WORKDIR/share/workable_program.log <<eof
+    # if started ok, then create a workable program to a file
+    if [[ $RETVAL -eq 0 ]]; then
+    # Note cat with eof must start at row 0, and with eof end only, such as no blank spaces, etc
+    cat >$WORKDIR/share/workable_program.log <<eof
 $SOURCEDIR
 eof
     echo_g "Deploy successfully! "
@@ -238,49 +239,49 @@ eof
     else
         echo_r "Error: Deploy failed! "
         $0 rollback
-	fi
+    fi
 }
 
 # Rollback to last right configuraton
 function rollback() {
-	# The key is find last files which can work
-	WORKABLE_PROGRAM=`cat $WORKDIR/share/workable_program.log`
+    # The key is find last files which can work
+    WORKABLE_PROGRAM=`cat $WORKDIR/share/workable_program.log`
     if [[ -z WORKABLE_PROGRAM ]]; then
         echo_r "Error: Can NOT find workable release version! Please check if it is first deployment! "
         exit 1
     fi
-	# # Stop service
-	if [[ -e $WORKDIR/current/bin/startup.sh ]]; then
-	    $WORKDIR/current/bin/startup.sh stop
-	fi
+    # # Stop service
+    if [[ -e $WORKDIR/current/bin/startup.sh ]]; then
+        $WORKDIR/current/bin/startup.sh stop
+    fi
 
-	# Remove failed deploy
-	rm -rf $WORKDIR/current
+    # Remove failed deploy
+    rm -rf $WORKDIR/current
 
-	# Remake source code symbolic link to current
-	ln -s $WORKABLE_PROGRAM $WORKDIR/current
+    # Remake source code symbolic link to current
+    ln -s $WORKABLE_PROGRAM $WORKDIR/current
 
-	# Remake conf and logs symbolic link to current
-	[ -d $WORKDIR/share/conf ] && ln -s $WORKDIR/share/conf $WORKDIR/current
-	[ -d $WORKDIR/share/logs ] && ln -s $WORKDIR/share/logs $WORKDIR/current
+    # Remake conf and logs symbolic link to current
+    [ -d $WORKDIR/share/conf ] && ln -s $WORKDIR/share/conf $WORKDIR/current
+    [ -d $WORKDIR/share/logs ] && ln -s $WORKDIR/share/logs $WORKDIR/current
 
-	# Start service or validate status
-	if [[ -e $WORKDIR/current/bin/startup.sh ]]; then
-	    $WORKDIR/current/bin/startup.sh start
-	    RETVAL=$?
+    # Start service or validate status
+    if [[ -e $WORKDIR/current/bin/startup.sh ]]; then
+        $WORKDIR/current/bin/startup.sh start
+        RETVAL=$?
     else
         # TODO
         # external health check
-	    RETVAL=0
+        RETVAL=0
     fi
-	RETVAL=$?
+    RETVAL=$?
 
-	# if started ok, then create a workable program to a file
-	if [[ $RETVAL -eq 0 ]]; then
-	    echo_g "Rollback successfully! "
-	    echo_g "current workable version is $WORKABLE_PROGRAM"
-	    ls --color=auto -l $WORKDIR/current
-	fi
+    # if started ok, then create a workable program to a file
+    if [[ $RETVAL -eq 0 ]]; then
+        echo_g "Rollback successfully! "
+        echo_g "current workable version is $WORKABLE_PROGRAM"
+        ls --color=auto -l $WORKDIR/current
+    fi
 }
 
 function destroy() {
@@ -322,8 +323,8 @@ function destroy() {
 
 # Just a test for call itself, comment it
 # if [[ $# -lt 1 ]]; then
-# 	$0 help
-# 	exit
+#   $0 help
+#   exit
 # fi
 case $1 in
     deploy)
